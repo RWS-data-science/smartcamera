@@ -1,13 +1,17 @@
 import os
 import time
-from skimage import io
+from scipy.misc import imread
 import random
 import keras
+import json
+import base64
 
 
 from lees_gps import get_location
 
 #start gps deamon
+
+pi_id = 'o3u43u'
 os.system('sudo gpsd -n /dev/ttyS0 -F /var/run/gpsd.sock')
 
 #load the model
@@ -24,7 +28,7 @@ while True:
     file_name_image = 'test.jpg'
     command = 'raspistill -o ' + file_name_image + ' -w 1024 -h 1024 --nopreview -t 2000'
     os.system(command)
-    photo = io.imread(file_name_image)
+    photo = imread(file_name_image)
     
     #get location
     location = get_location()
@@ -32,5 +36,9 @@ while True:
     
     #apply a random condition, later on this conditon is based on model applied to photo
     if(random.randint(0,10) == 5):
-        to_sent = [photo, time_string, location_string]
-        #Now I would like to sent this information to ESB
+        with open("test.jpg", "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read())
+        #information to be sent
+        to_sent = {'photo': encoded_string, 'time': time_string, 'location':location_string, 'filename': pi_id + '_' + time_string + '_' + location_string }
+        #construct json
+        to_sent = json.dumps(to_sent)
