@@ -36,7 +36,7 @@ while True:
     
     #apply a random condition, later on this conditon is based on model applied to photo
     if(random.randint(0,10) == 5):
-        with open("test.jpg", "rb") as image_file:
+        with open(file_name_image, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read())
         #information to be sent
         to_sent = {'photo': encoded_string, 'time': time_string, 'location':location_string, 'filename': pi_id + '_' + time_string + '_' + location_string }
