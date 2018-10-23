@@ -1,0 +1,137 @@
+#!/bin/bash
+
+# post installation script for smart cam devices
+# october 2018
+
+GIT_REPO_URL='https://github.com/RWS-data-science/smartcamera.git'
+GIT_BRANCH='master'
+
+################################################################################
+
+set -e
+
+# check if root:
+if [ "$EUID" -ne 0 ]; then
+    echo 'This script needs to be run as root'
+    #exit
+fi
+
+# check if online:
+nc -z www.github.com 80  >/dev/null 2>&1
+online=$?
+if [ $online -ne 0 ]; then
+    echo 'This script requires an active internet connection'
+    exit
+fi
+
+# check if user and ssh key exists:
+if [ ! -f /home/camuser/.ssh/id_rsa.pub ]; then
+    echo 'Camuser does not appear to be configured correctly'
+    #exit
+fi
+
+################################################################################
+
+# configure firewall:
+mkdir /etc/firewall
+
+cat > /etc/firewall/enable.sh << EOF
+#!/bin/sh
+
+# Simple firewall config based on https://wiki.debian.org/DebianFirewall
+
+PATH='/sbin'
+
+# Flush the tables to apply changes
+iptables -F
+
+# Default policy to drop 'everything' but our output to internet
+iptables -P FORWARD DROP
+iptables -P INPUT   DROP
+iptables -P OUTPUT  ACCEPT
+
+# Allow established connections
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Allow local programs that use loopback
+iptables -A INPUT -s 127.0.0.0/8 -d 127.0.0.0/8 -i lo -j ACCEPT
+
+# Allow incoming SSH connections
+iptables -A INPUT -p tcp --dport 22 -m state --state NEW -j ACCEPT
+EOF
+
+cat > /etc/systemd/system/firewall.service << EOF
+
+[Unit]
+Description=Add Firewall Rules to iptables
+
+[Service]
+Type=oneshot
+ExecStart=/etc/firewall/enable.sh
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+chmod +x /etc/firewall/enable.sh
+systemctl enable firewall.service
+systemctl start firewall
+
+################################################################################
+
+# run available updates:
+apt update
+apt upgrade -y
+
+# install some tools:
+apt install git uuid-runtime -y
+
+# set hostname / cam_id:
+echo `uuidgen | cut -d- -f1` > /etc/hostname
+
+################################################################################
+
+# install smartcam dependencies:
+apt install gpsd python3-git -y
+
+# install systemd service file:
+cat > /etc/systemd/system/smartcam.service << EOF
+
+[Unit]
+Description=Main process for the Smartcam application
+After=network.target systemd-journald.target
+
+[Service]
+Type=simple
+User=camuser
+Group=camgroup
+WorkingDirectory=/home/camuser/smartcamera/
+ExecStart=/home/camuser/smartcamera/smartcam
+StandardOutput=syslog
+StandardError=syslog
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# start systemd service at boot:
+systemctl enable smartcam
+
+# fetch smartcam software:
+runuser -l camuser -c \
+    "git clone $GIT_REPO_URL -b $GIT_BRANCH"
+
+# copy main process for auto-update procedure:
+runuser -l camuser -c \
+     'cp ~/smartcamera/smartcam.py ~/smartcamera/smartcam'
+
+# initialize ram disk as scratch space for images:
+echo "none /media/ramdisk tmpfs nodev,nosuid,noexec,size=50M 0 0" >> /etc/fstab
+mkdir /media/ramdisk
+chown camuser:camgroup /media/ramdisk
+mount -a
+
+# all done:
+reboot
