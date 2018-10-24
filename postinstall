@@ -126,6 +126,8 @@ runuser -l camuser -c \
 # copy main process for auto-update procedure:
 runuser -l camuser -c \
      'cp ~/smartcamera/smartcam.py ~/smartcamera/smartcam'
+runuser -l camuser -c \
+    'chmod +x ~/smartcamera/smartcam'
 
 # initialize ram disk as scratch space for images:
 echo "none /media/ramdisk tmpfs nodev,nosuid,noexec,size=50M 0 0" >> /etc/fstab
