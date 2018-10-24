@@ -2,9 +2,12 @@ import os
 import time
 from scipy.misc import imread
 import random
-import keras
 import json
 import base64
+
+# force keras backend:
+os.environ['KERAS_BACKEND'] = 'theano'
+import keras
 
 
 from lees_gps import get_location
