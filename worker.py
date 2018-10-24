@@ -10,7 +10,7 @@ import time
 # force keras backend:
 os.environ['KERAS_BACKEND'] = 'theano'
 import keras
-from scipy.misc import imread
+from scipy.ndimage import imread
 
 from lees_gps import get_location
 
