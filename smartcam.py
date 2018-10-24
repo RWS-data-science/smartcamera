@@ -24,11 +24,12 @@ import git
 
 ################################################################################
 
-repo = git.Repo('.')
+CAM_ID = socket.gethostname()
+GIT_REPO = git.Repo('.')
 
 logger = logging.getLogger()
 logger.addHandler(logging.StreamHandler(sys.stdout))
-if str(repo.active_branch) is 'release':
+if str(GIT_REPO.active_branch) is 'release':
     logger.setLevel(logging.INFO)
 else: # master/devrelease/others
     logger.setLevel(logging.DEBUG)
@@ -54,7 +55,7 @@ def get_file_checksum(filename):
     return(md5hash)
 
 def git_fetch_from_remote():
-    fetch = repo.remotes.origin.fetch()[0]
+    fetch = GIT_REPO.remotes.origin.fetch()[0]
     if fetch.old_commit is not None:
         logger.info("Fetching %.7s .. %.7s" % (fetch.old_commit, fetch.commit))
         return(True)
@@ -98,7 +99,7 @@ try:
     worker_md5 = get_file_checksum('worker.py')
 
     import worker
-    worker_p = mp.Process(target=worker.run, args=(logger,))
+    worker_p = mp.Process(target=worker.run, args=(CAM_ID, logger,))
 except Exception as e:
     worker_p = None
     logger.error(e)
@@ -130,7 +131,7 @@ while True:
         else:
             if worker_p.exitcode: # crashed
                 logger.warning('Worker process seems to have crashed')
-                worker_p = mp.Process(target=worker.run, args=(logger,))
+                worker_p = mp.Process(target=worker.run, args=(CAM_ID, logger,))
             worker_p.start()
     except Exception as e:
         logger.error("Unable to initialise worker (%s)" % e)

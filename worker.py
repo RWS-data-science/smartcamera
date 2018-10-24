@@ -3,6 +3,7 @@
 
 import base64
 import json
+import multiprocessing as mp
 import os
 import random
 import time
@@ -15,16 +16,14 @@ from scipy.ndimage import imread
 from lees_gps import get_location
 
 #start gps deamon
-pi_id = 'o3u43u'
 os.system('sudo gpsd -n /dev/ttyS0 -F /var/run/gpsd.sock')
 
 #load the model
 model = keras.models.load_model('model')
 
-def run(logger):
+def run(cam_id, logger):
+    logger.info("Starting Worker process #%d" % mp.current_process().pid)
     while True:
-        print('doing one batch of work')
-
         #get time
         t = time.localtime()
         time_string = str(t.tm_year) + '-' + str(t.tm_yday) + '-' + str(t.tm_hour) + '-' + str(t.tm_min) + '-' + str(t.tm_sec)
@@ -46,7 +45,7 @@ def run(logger):
             to_sent = {'photo': encoded_string,
                        'time': time_string,
                        'location':location_string,
-                       'filename': "%s_%s_%s" % (pi_id, time_string, location_string)
+                       'filename': "%s_%s_%s" % (cam_id, time_string, location_string)
                       }
 
             #construct json
