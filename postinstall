@@ -94,6 +94,13 @@ echo `uuidgen | cut -d- -f1` > /etc/hostname
 # install smartcam dependencies:
 apt install gpsd python3-git -y
 
+# install keras:
+# NOTE: python3-keras is currently available in debian/sid. hopefully
+#       it will have reached testing/backports by the time we go live so we
+#       we can avoid installing through pip:
+apt install python3-pip -y
+pip3 install keras==2.1.6
+
 # install systemd service file:
 cat > /etc/systemd/system/smartcam.service << EOF
 
