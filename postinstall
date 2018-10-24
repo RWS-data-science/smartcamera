@@ -142,7 +142,6 @@ runuser -l camuser -c \
 echo "none /media/ramdisk tmpfs nodev,nosuid,noexec,size=50M 0 0" >> /etc/fstab
 mkdir /media/ramdisk
 chown camuser:camgroup /media/ramdisk
-mount -a
 
 # all done:
 reboot
