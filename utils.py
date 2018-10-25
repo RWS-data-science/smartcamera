@@ -2,8 +2,13 @@
 # Utilities for smartcam application
 
 from dbus import Interface, SystemBus
+from subprocess import check_output
 
 ################################################################################
+
+def get_git_branch():
+    cmd_out = check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])
+    return(cmd_out.decode('utf-8').rstrip())
 
 def __systemd_create_interface():
     try:
