@@ -34,6 +34,8 @@ while True:
 
     for line in res.text.split('\n'):
         if not line.startswith('#'):
+            # skip accidently committed empty lines
+            if not "@" in line: continue
 
             elems = line.split(' @ ')
             cmd_epoch, commands = int(elems[0]), elems[1:]
