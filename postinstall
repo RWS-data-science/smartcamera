@@ -119,7 +119,11 @@ systemctl enable smartcam_cmds
 
 
 # install smartcam dependencies:
-apt install gpsd python3-git python3-theano -y
+apt install gpsd \
+            python3-h5py \
+            python3-git \
+            python3-theano \
+            python3-yaml -y
 
 # install keras:
 apt install python3-pip -y
