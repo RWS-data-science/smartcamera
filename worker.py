@@ -5,8 +5,7 @@ import base64
 import json
 import multiprocessing as mp
 import os
-<<<<<<< HEAD
-os.chdir('/home/daniel/projecten/smartcamera')
+#os.chdir('/home/daniel/projecten/smartcamera')
 
 import time
 from scipy.misc import imread
