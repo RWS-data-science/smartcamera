@@ -3,17 +3,29 @@
 # post installation script for smart cam devices
 # october 2018
 
+set -e
+
 GIT_REPO_URL='https://github.com/RWS-data-science/smartcamera.git'
-GIT_BRANCH='master'
+
+for i in "$@"; do
+case $i in
+    -b=*|--branch=*)
+    GIT_BRANCH="${i#*=}"
+    ;;
+esac
+done
+
+if [ -z "$GIT_BRANCH" ]; then
+    echo "GIT_BRANCH undefined, setting to default value 'master'"
+    GIT_BRANCH='master'
+fi
 
 ################################################################################
-
-set -e
 
 # check if root:
 if [ "$EUID" -ne 0 ]; then
     echo 'This script needs to be run as root'
-    #exit
+    exit
 fi
 
 # check if online:
@@ -27,7 +39,7 @@ fi
 # check if user and ssh key exists:
 if [ ! -f /home/camuser/.ssh/id_rsa.pub ]; then
     echo 'Camuser does not appear to be configured correctly'
-    #exit
+    exit
 fi
 
 ################################################################################
