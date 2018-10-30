@@ -99,7 +99,7 @@ try:
     worker_md5 = get_file_checksum('worker.py')
 
     import worker
-    worker_p = mp.Process(target=worker.run, args=(CAM_ID, logger,))
+    worker_p = mp.Process(target=worker.run, args=(CAM_ID,))
 except Exception as e:
     worker_p = None
     logger.error(e)
@@ -131,7 +131,7 @@ while True:
         else:
             if worker_p.exitcode: # crashed
                 logger.warning('Worker process seems to have crashed')
-                worker_p = mp.Process(target=worker.run, args=(CAM_ID, logger,))
+                worker_p = mp.Process(target=worker.run, args=(CAM_ID,))
             worker_p.start()
     except Exception as e:
         logger.error("Unable to initialise worker (%s)" % e)
