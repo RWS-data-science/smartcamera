@@ -27,7 +27,7 @@ except:
 
 ###
 
-IMAGE_FILEPATH = 'image.jpg'
+IMAGE_FILEPATH = './tmp/image.jpg'
 
 ###
 
@@ -64,6 +64,7 @@ def run(cam_id=None):
         photo = np.expand_dims(photo, axis=0)
 
         #get location
+        logger.debug('worker : get location')
         location = get_location()
         location_string = str(location)
 

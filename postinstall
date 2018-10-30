@@ -181,10 +181,8 @@ runuser -l camuser -c \
 runuser -l camuser -c \
     'chmod +x ~/smartcamera/smartcam'
 
-# initialize ram disk as scratch space for images:
-echo "none /media/ramdisk tmpfs nodev,nosuid,noexec,size=50M 0 0" >> /etc/fstab
-mkdir /media/ramdisk
-chown camuser:camgroup /media/ramdisk
+# initialize ramdisk as scratch space for images:
+echo "none /home/camuser/smartcamera/tmp tmpfs nodev,nosuid,noexec,size=50M 0 0" >> /etc/fstab
 
 # all done:
 reboot
