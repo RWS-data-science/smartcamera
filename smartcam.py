@@ -55,10 +55,13 @@ def get_file_checksum(filename):
     return(md5hash)
 
 def git_fetch_from_remote():
-    fetch = GIT_REPO.remotes.origin.fetch()[0]
-    if fetch.old_commit is not None:
-        logger.info("Fetching %.7s .. %.7s" % (fetch.old_commit, fetch.commit))
-        return(True)
+    try:
+        fetch = GIT_REPO.remotes.origin.fetch()[0]
+        if fetch.old_commit is not None:
+            logger.info("Fetching %.7s .. %.7s" % (fetch.old_commit, fetch.commit))
+            return(True)
+    except Exception as e:
+        logger.error(str(e))
     return(False)
 
 def git_merge_changes():
