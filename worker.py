@@ -28,20 +28,21 @@ except:
 ###
 
 IMAGE_FILEPATH = './tmp/image.jpg'
+MODEL_FILEPATH = 'yolo.h5'
 
 ###
 
 #start gps deamon
 #os.system('sudo gpsd -n /dev/ttyS0 -F /var/run/gpsd.sock')
 
-logger = logging.getLogger()
-logger.debug('Loading keras model..')
-model = keras.models.load_model('yolo.h5')
-
 ###
 
 def run(cam_id=None):
+    logger = logging.getLogger()
     logger.info("Starting Worker process %d" % mp.current_process().pid)
+
+    logger.debug('Loading keras model..')
+    model = keras.models.load_model(MODEL_FILEPATH)
 
     while True:
         logger.debug('worker : starting loop')
