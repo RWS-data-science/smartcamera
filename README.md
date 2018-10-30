@@ -18,6 +18,7 @@ This script is not included within this repository and configures the following:
 
 * Creates the user that runs the smartcam processes
 * Imports pre-made ssh key for user above
+* Adds user above to video/dialout groups
 
 ##### 2. Postinstall script
 
@@ -45,5 +46,6 @@ Additionally, a smartcam_cmds process is installed to allow executing custom com
 
 #### Future improvements
 
-* Remove worker dependency on main process.
+* Remove worker dependency on main process
+* Set up python env for easier dependency mgmt
 * Intrusion detection 
