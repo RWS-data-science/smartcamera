@@ -3,82 +3,81 @@
 
 import base64
 import json
+import logging
 import multiprocessing as mp
 import os
-#os.chdir('/home/daniel/projecten/smartcamera')
-
-import time
-from scipy.misc import imread
 import random
-import keras
-import json
-import base64
-import numpy as np
-import random
+import shutil
+import sys
 import time
 
-# force keras backend:
+###
+
 os.environ['KERAS_BACKEND'] = 'theano'
+
 import keras
-from scipy.ndimage import imread
+import numpy as np
 
 from lees_gps import get_location
 
+try:
+    from scipy.misc import imread # deprecated
+except:
+    from scipy.ndimage import imread
+
+###
+
+IMAGE_FILEPATH = './tmp/image.jpg'
+MODEL_FILEPATH = 'yolo.h5'
+
+###
+
 #start gps deamon
-os.system('sudo gpsd -n /dev/ttyS0 -F /var/run/gpsd.sock')
+#os.system('sudo gpsd -n /dev/ttyS0 -F /var/run/gpsd.sock')
 
-#load the model
-model = keras.models.load_model('yolo.h5')
+###
 
-while True:
-    print('doing one batch of work')
-    
-    #get time
-    t = time.localtime()
-    time_string = str(t.tm_year) + '-' + str(t.tm_yday) + '-' + str(t.tm_hour) + '-' + str(t.tm_min) + '-' + str(t.tm_sec)
-    
-    #get photo
-    file_name_image = 'test.jpg'
-    command = 'raspistill -o ' + file_name_image + ' -w 1024 -h 1024 --nopreview -t 2000'
-    os.system(command)
-    photo = imread(file_name_image)
-    photo = np.expand_dims(photo, axis = 0)
-    
-    #get location
-    location = get_location()
-    location_string = str(location)
-    
-    prediction = model.predict(photo)
-    
-    #apply a random condition, later on this conditon is based on model applied to photo
-    if(random.randint(0,10) == 5):
-        with open(file_name_image, "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read())
-        #information to be sent
-        to_sent = {'photo': encoded_string, 'time': time_string, 'location':location_string, 'filename': pi_id + '_' + time_string + '_' + location_string }
-        #construct json
-        to_sent = json.dumps(to_sent)
+def run(cam_id=None):
+    logger = logging.getLogger()
+    logger.info("Starting Worker process %d" % mp.current_process().pid)
 
-def run(cam_id, logger):
-    logger.info("Starting Worker process #%d" % mp.current_process().pid)
+    logger.debug('Loading keras model..')
+    model = keras.models.load_model(MODEL_FILEPATH)
+
     while True:
+        logger.debug('worker : starting loop')
+
         #get time
         t = time.localtime()
-        time_string = str(t.tm_year) + '-' + str(t.tm_yday) + '-' + str(t.tm_hour) + '-' + str(t.tm_min) + '-' + str(t.tm_sec)
+        time_string = "%d-%d-%d-%d-%d" % (t.tm_year, t.tm_yday, t.tm_hour, t.tm_min, t.tm_sec)
 
         #get photo
-        file_name_image = 'test.jpg'
-        command = 'raspistill -o ' + file_name_image + ' -w 1024 -h 1024 --nopreview -t 2000'
-        os.system(command)
-        photo = imread(file_name_image)
+        if not shutil.which('raspistill'):
+            logger.error('worker : raspistill utility not found')
+            sys.exit(1)
+
+        logger.debug('worker : taking photo')
+        cmd = "raspistill -o %s -w 1024 -h 1024 --nopreview -t 2000" % IMAGE_FILEPATH
+        os.system(cmd)
+        logger.debug('worker : reading photo')
+        photo = imread(IMAGE_FILEPATH)
+        logger.debug('worker : expand dims')
+        photo = np.expand_dims(photo, axis=0)
 
         #get location
-        location_string = str(get_location)
+        logger.debug('worker : get location')
+        location = get_location()
+        location_string = str(location)
+
+        logger.debug('worker : make prediction')
+        prediction = model.predict(photo)
 
         #apply a random condition, later on this conditon is based on model applied to photo
         if random.randint(0, 10) == 5:
-            with open(file_name_image, "rb") as image_file:
+            logger.debug('worker : selected')
+            with open(IMAGE_FILEPATH, "rb") as image_file:
                 encoded_string = base64.b64encode(image_file.read())
+
             #information to be sent
             to_sent = {'photo': encoded_string,
                        'time': time_string,
@@ -87,4 +86,7 @@ def run(cam_id, logger):
                       }
 
             #construct json
+            logger.debug('worker : sending json msg')
             to_sent = json.dumps(to_sent)
+
+#run()

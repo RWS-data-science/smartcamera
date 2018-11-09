@@ -3,17 +3,29 @@
 # post installation script for smart cam devices
 # october 2018
 
+set -e
+
 GIT_REPO_URL='https://github.com/RWS-data-science/smartcamera.git'
-GIT_BRANCH='master'
+
+for i in "$@"; do
+case $i in
+    -b=*|--branch=*)
+    GIT_BRANCH="${i#*=}"
+    ;;
+esac
+done
+
+if [ -z "$GIT_BRANCH" ]; then
+    echo "GIT_BRANCH undefined, setting to default value 'master'"
+    GIT_BRANCH='master'
+fi
 
 ################################################################################
-
-set -e
 
 # check if root:
 if [ "$EUID" -ne 0 ]; then
     echo 'This script needs to be run as root'
-    #exit
+    exit
 fi
 
 # check if online:
@@ -27,7 +39,7 @@ fi
 # check if user and ssh key exists:
 if [ ! -f /home/camuser/.ssh/id_rsa.pub ]; then
     echo 'Camuser does not appear to be configured correctly'
-    #exit
+    exit
 fi
 
 ################################################################################
@@ -91,8 +103,39 @@ echo `uuidgen | cut -d- -f1` > /etc/hostname
 
 ################################################################################
 
+# add daemon process to allow custom commands to be run at specific epochs
+
+cat > /etc/systemd/system/smartcam_cmds.service << EOF
+
+[Unit]
+Description=CMDs process for the Smartcam application
+After=network.target systemd-journald.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/camuser/smartcamera/
+ExecStart=/home/camuser/smartcamera/cmds.py
+StandardOutput=syslog
+StandardError=syslog
+Restart=always
+RestartSec=600
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# start systemd service at boot:
+systemctl enable smartcam_cmds
+
+################################################################################
+
+
 # install smartcam dependencies:
-apt install gpsd python3-git python3-theano -y
+apt install gpsd \
+            python3-h5py \
+            python3-git \
+            python3-theano \
+            python3-yaml -y
 
 # install keras:
 apt install python3-pip -y
@@ -104,7 +147,7 @@ pip3 install keras==2.1.6
 pip3 install gps
 
 # install systemd service file:
-cat > /etc/systemd/system/smartcam.service << EOF
+cat > /etc/systemd/system/smartcam_main.service << EOF
 
 [Unit]
 Description=Main process for the Smartcam application
@@ -119,14 +162,14 @@ ExecStart=/home/camuser/smartcamera/smartcam
 StandardOutput=syslog
 StandardError=syslog
 Restart=always
-RestartSec=15
+RestartSec=30
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
 # start systemd service at boot:
-systemctl enable smartcam
+systemctl enable smartcam_main
 
 # fetch smartcam software:
 runuser -l camuser -c \
@@ -138,10 +181,8 @@ runuser -l camuser -c \
 runuser -l camuser -c \
     'chmod +x ~/smartcamera/smartcam'
 
-# initialize ram disk as scratch space for images:
-echo "none /media/ramdisk tmpfs nodev,nosuid,noexec,size=50M 0 0" >> /etc/fstab
-mkdir /media/ramdisk
-chown camuser:camgroup /media/ramdisk
+# initialize ramdisk as scratch space for images:
+echo "none /home/camuser/smartcamera/tmp tmpfs nodev,nosuid,noexec,size=50M 0 0" >> /etc/fstab
 
 # all done:
 reboot

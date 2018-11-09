@@ -1,0 +1,16 @@
+################################################################################
+#                                                                              #
+# This is the file that is polled by smartcam_cmds to allow executing          #
+# custom system commands at defined future times. This might be useful for     #
+# maintenance tasks like package upgrades or to repair unforseen breakages     #
+# on external devices that are not remotely accesible.                         #
+#                                                                              #
+# To schedule command(s), add an uncommented line with following attributes:   #
+#                                                                              #
+#     some-future-epoch-in-seconds @ cmd-1 @ cmd-2 @ ... @ cmd-n               #
+#                                                                              #
+# Example:                                                                     #
+#                                                                              #
+#     3639254400 @ apt update @ apt upgrade -y @ reboot                        #
+#                                                                              #
+################################################################################
