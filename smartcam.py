@@ -120,10 +120,11 @@ while True:
 
         if check_worker_update(worker_md5):
             if worker_p.is_alive():
+                logger.info('Worker updated, terminating existing worker')
                 worker_p.terminate()
+                time.sleep(10)
             try:
                 importlib.reload(worker)
-                logger.info('Worker updated, terminating existing worker')
             except Exception as e:
                 logger.error(e)
 
