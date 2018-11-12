@@ -16,6 +16,8 @@ import time
 os.environ['KERAS_BACKEND'] = 'theano'
 
 import keras
+print(keras.__version__)
+
 import numpy as np
 import requests
 import serial
@@ -51,8 +53,11 @@ def run(cam_id=0):
     logger = logging.getLogger()
     logger.info("Starting Worker process %d" % mp.current_process().pid)
 
-    logger.debug('Loading keras model..')
-    model = keras.models.load_model(MODEL_FILEPATH)
+    try:
+        logger.debug('Loading keras model..')
+        model = keras.models.load_model(MODEL_FILEPATH)
+    except Exception as e:
+        logger.error(e)
 
     try:
         ser = serial.Serial('/dev/ttyS0',9600)
@@ -85,16 +90,17 @@ def run(cam_id=0):
         os.system(cmd)
         logger.debug('worker : reading photo')
         photo = imread(IMAGE_FILEPATH)
-        logger.debug('worker : expand dims')
         photo = np.expand_dims(photo, axis=0)
 
         #get location
         logger.debug('worker : get location')
-        location = get_gps_location(ser)
-        location_string = str(location)
+        location_string = get_gps_location(ser)
+
+        # NOTE: dummy array to match model layout:
+        dummy = np.zeros([1,1,1,1,10,4])
 
         logger.debug('worker : make prediction')
-        prediction = model.predict(photo)
+        prediction = model.predict([photo, dummy])
 
         #apply a random condition, later on this conditon is based on model applied to photo
         if random.randint(0, 10) == 5:
@@ -121,4 +127,4 @@ def run(cam_id=0):
             except Exception as e:
                 logger.error(e)
 
-#run()
+run()
