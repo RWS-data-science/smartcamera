@@ -75,11 +75,11 @@ def run(cam_id=0):
     while True:
         logger.debug('worker : starting loop')
 
-        #get time
+        # get time
         t = time.localtime()
         time_string = "%d-%d-%d-%d-%d" % (t.tm_year, t.tm_yday, t.tm_hour, t.tm_min, t.tm_sec)
 
-        #get photo
+        # get photo
         if not shutil.which('raspistill'):
             logger.error('worker : raspistill utility not found')
             #sys.exit(1)
@@ -91,7 +91,7 @@ def run(cam_id=0):
         photo = imread(IMAGE_FILEPATH)
         photo = np.expand_dims(photo, axis=0)
 
-        #get location
+        # get location
         logger.debug('worker : get location')
         location_string = get_gps_location(ser)
 
@@ -101,24 +101,24 @@ def run(cam_id=0):
         logger.debug('worker : make prediction')
         prediction = model.predict([photo, dummy])
 
-        #apply a random condition, later on this conditon is based on model applied to photo
+        # apply a random condition, later on this conditon is based on model applied to photo
         if random.randint(0, 10) == 5:
             logger.debug('worker : selected')
             with open(IMAGE_FILEPATH, "rb") as image_file:
                 encoded_string = base64.b64encode(image_file.read())
 
-            #information to be sent
+            # information to be sent
             to_sent = {'photo': encoded_string.decode('ascii'),
                        'time': time_string,
                        'location': location_string,
                        'filename': "%s_%s_%s" % (cam_id, time_string, location_string)
                       }
 
-            #construct json
+            # construct json
             logger.debug('worker : sending json msg')
             to_sent = json.dumps(to_sent)
 
-            #sent json:
+            # sent json:
             try:
                 # a message is approximately 180kb, so even when connection
                 # falls back to gsm/2g speed at @ 14.4 kbps upload, a timeout
