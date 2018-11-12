@@ -121,7 +121,10 @@ def run(cam_id=0):
 
             #sent json:
             try:
-                res = requests.post(esb_url, json=to_sent)
+                # a message is approximately 180kb, so even when connection
+                # falls back to gsm/2g speed at @ 14.4 kbps upload, a timeout
+                # of a minute should suffice
+                res = requests.post(esb_url, json=to_sent, timeout=60)
                 if res.status_code == 200:
                     logger.debug('succesfully sent data')
             except Exception as e:
