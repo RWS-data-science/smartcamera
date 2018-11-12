@@ -134,6 +134,8 @@ systemctl enable smartcam_cmds
 apt install gpsd \
             python3-h5py \
             python3-git \
+            python3-nmea2 \
+            python3-serial \
             python3-theano \
             python3-yaml -y
 

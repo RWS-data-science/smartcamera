@@ -17,8 +17,8 @@ os.environ['KERAS_BACKEND'] = 'theano'
 
 import keras
 import numpy as np
-
-from lees_gps import get_location
+import serial
+import pynmea2
 
 try:
     from scipy.misc import imread # deprecated
@@ -28,12 +28,20 @@ except:
 ###
 
 IMAGE_FILEPATH = './tmp/image.jpg'
-MODEL_FILEPATH = 'yolo.h5'
+MODEL_FILEPATH = 'model'
+GPS_DEVICEPORT = '/dev/tty50'
 
 ###
 
-#start gps deamon
-#os.system('sudo gpsd -n /dev/ttyS0 -F /var/run/gpsd.sock')
+def get_gps_location(ser):
+    if not ser: return('no gps device')
+
+    for i in range(100):
+        data = ser.readline().decode('utf-8')
+        if data.startswith('$GPRMC'):
+            msg = pynmea2.parse(data)
+            return (msg.lat, msg.lat_dir, msg.lon, msg.lon_dir, msg.spd_over_grnd)
+    return('no gps fix')
 
 ###
 
@@ -43,6 +51,14 @@ def run(cam_id=None):
 
     logger.debug('Loading keras model..')
     model = keras.models.load_model('/home/daniel/projecten/smartcamera/tiny_yolo.h5' )
+
+    try:
+        ser = serial.Serial('/dev/ttyS0',9600)
+    except serial.serialutil.SerialException:
+        ser = None
+        logger.error('unable to initialise gps device')
+
+    ###
 
     while True:
         logger.debug('worker : starting loop')
@@ -66,7 +82,7 @@ def run(cam_id=None):
 
         #get location
         logger.debug('worker : get location')
-        location = get_location()
+        location = get_gps_location(ser)
         location_string = str(location)
 
         logger.debug('worker : make prediction')
@@ -81,7 +97,7 @@ def run(cam_id=None):
             #information to be sent
             to_sent = {'photo': encoded_string,
                        'time': time_string,
-                       'location':location_string,
+                       'location': location_string,
                        'filename': "%s_%s_%s" % (cam_id, time_string, location_string)
                       }
 
