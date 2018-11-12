@@ -42,7 +42,7 @@ def run(cam_id=None):
     logger.info("Starting Worker process %d" % mp.current_process().pid)
 
     logger.debug('Loading keras model..')
-    model = keras.models.load_model(MODEL_FILEPATH)
+    model = keras.models.load_model('/home/daniel/projecten/smartcamera/tiny_yolo.h5' )
 
     while True:
         logger.debug('worker : starting loop')
