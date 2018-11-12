@@ -17,6 +17,7 @@ os.environ['KERAS_BACKEND'] = 'theano'
 
 import keras
 import numpy as np
+import requests
 import serial
 import pynmea2
 
@@ -45,7 +46,7 @@ def get_gps_location(ser):
 
 ###
 
-def run(cam_id=None):
+def run(cam_id=0):
     logger = logging.getLogger()
     logger.info("Starting Worker process %d" % mp.current_process().pid)
 
@@ -57,6 +58,12 @@ def run(cam_id=None):
     except serial.serialutil.SerialException:
         ser = None
         logger.error('unable to initialise gps device')
+
+    try:
+        with open('/etc/esb_url') as f: esb_url = f.readline().rstrip()
+    except Exception:
+        logger.error('unable to read esb target url')
+        esb_url = None
 
     ###
 
@@ -70,7 +77,7 @@ def run(cam_id=None):
         #get photo
         if not shutil.which('raspistill'):
             logger.error('worker : raspistill utility not found')
-            sys.exit(1)
+            #sys.exit(1)
 
         logger.debug('worker : taking photo')
         cmd = "raspistill -o %s -w 416 -h 416 --nopreview -t 2000" % IMAGE_FILEPATH
@@ -95,7 +102,7 @@ def run(cam_id=None):
                 encoded_string = base64.b64encode(image_file.read())
 
             #information to be sent
-            to_sent = {'photo': encoded_string,
+            to_sent = {'photo': encoded_string.decode('ascii'),
                        'time': time_string,
                        'location': location_string,
                        'filename': "%s_%s_%s" % (cam_id, time_string, location_string)
@@ -104,5 +111,13 @@ def run(cam_id=None):
             #construct json
             logger.debug('worker : sending json msg')
             to_sent = json.dumps(to_sent)
+
+            #sent json:
+            try:
+                res = requests.post(esb_url, json=to_sent)
+                if res.status_code == 200:
+                    logger.debug('succesfully sent data')
+            except Exception as e:
+                logger.error(e)
 
 #run()
