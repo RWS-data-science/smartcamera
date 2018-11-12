@@ -135,7 +135,7 @@ while True:
     # monitor worker health:
     try:
         if worker_p.is_alive():
-            logger.debug('Worker process seems alive and running')
+            logger.debug('Worker process seems alive and well')
         else:
             if worker_p.exitcode: # crashed
                 logger.warning('Worker process seems to have crashed')
