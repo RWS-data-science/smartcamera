@@ -94,6 +94,12 @@ def check_worker_update(initial_md5):
         return(True)
     return(False)
 
+def terminate_worker():
+    if worker_p.is_alive():
+        logger.info('Terminating existing worker')
+        worker_p.terminate()
+        time.sleep(10)
+    return
 
 ################################################################################
 
@@ -116,13 +122,11 @@ while True:
 
         if check_main_update():
             logger.info('Main update installed, restarting daemon')
+            terminate_worker()
             sys.exit(0)
 
         if check_worker_update(worker_md5):
-            if worker_p.is_alive():
-                logger.info('Worker updated, terminating existing worker')
-                worker_p.terminate()
-                time.sleep(10)
+            terminate_worker()
             try:
                 importlib.reload(worker)
             except Exception as e:
