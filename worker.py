@@ -8,7 +8,6 @@ import multiprocessing as mp
 import os
 import random
 import shutil
-import sys
 import time
 
 ###
@@ -16,8 +15,6 @@ import time
 os.environ['KERAS_BACKEND'] = 'theano'
 
 import keras
-print(keras.__version__)
-
 import numpy as np
 import requests
 import serial
@@ -39,12 +36,12 @@ GPS_DEVICEPORT = '/dev/tty50'
 def get_gps_location(ser):
     if not ser: return('no gps device')
 
-    for i in range(100):
+    for _ in range(100):
         data = ser.readline().decode('utf-8')
         if data.startswith('$GPRMC'):
             msg = pynmea2.parse(data)
             return ("%s %s %s %s %f" %
-                (msg.lat, msg.lat_dir, msg.lon, msg.lon_dir, msg.spd_over_grnd))
+                    (msg.lat, msg.lat_dir, msg.lon, msg.lon_dir, msg.spd_over_grnd))
     return('no gps fix')
 
 ###
@@ -54,19 +51,21 @@ def run(cam_id=0):
     logger.info("Starting Worker process %d" % mp.current_process().pid)
 
     try:
+        logger.debug("Running keras v%s" % (keras.__version__))
         logger.debug('Loading keras model..')
         model = keras.models.load_model(MODEL_FILEPATH)
     except Exception as e:
         logger.error(e)
 
     try:
-        ser = serial.Serial('/dev/ttyS0',9600)
+        ser = serial.Serial('/dev/ttyS0', 9600)
     except serial.serialutil.SerialException:
         ser = None
         logger.error('unable to initialise gps device')
 
     try:
-        with open('/etc/esb_url') as f: esb_url = f.readline().rstrip()
+        with open('/etc/esb_url') as fh:
+            esb_url = fh.readline().rstrip()
     except Exception:
         logger.error('unable to read esb target url')
         esb_url = None
@@ -97,7 +96,7 @@ def run(cam_id=0):
         location_string = get_gps_location(ser)
 
         # NOTE: dummy array to match model layout:
-        dummy = np.zeros([1,1,1,1,10,4])
+        dummy = np.zeros([1, 1, 1, 1, 10, 4])
 
         logger.debug('worker : make prediction')
         prediction = model.predict([photo, dummy])
@@ -130,4 +129,4 @@ def run(cam_id=0):
             except Exception as e:
                 logger.error(e)
 
-run()
+#run()
