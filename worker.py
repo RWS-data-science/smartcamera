@@ -68,7 +68,7 @@ def run(cam_id=0):
             esb_url = fh.readline().rstrip()
     except Exception:
         logger.error('unable to read esb target url')
-        esb_url = None
+        esb_url = 'http://127.0.0.1'
 
     ###
 
