@@ -41,7 +41,8 @@ def get_gps_location(ser):
         data = ser.readline().decode('utf-8')
         if data.startswith('$GPRMC'):
             msg = pynmea2.parse(data)
-            return (msg.lat, msg.lat_dir, msg.lon, msg.lon_dir, msg.spd_over_grnd)
+            return ("%s %s %s %s %f" %
+                (msg.lat, msg.lat_dir, msg.lon, msg.lon_dir, msg.spd_over_grnd))
     return('no gps fix')
 
 ###
