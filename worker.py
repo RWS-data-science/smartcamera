@@ -28,7 +28,7 @@ except:
 ###
 
 IMAGE_FILEPATH = './tmp/image.jpg'
-MODEL_FILEPATH = 'model'
+MODEL_FILEPATH = 'tiny_yolo.h5'
 GPS_DEVICEPORT = '/dev/tty50'
 
 ###
@@ -50,7 +50,7 @@ def run(cam_id=None):
     logger.info("Starting Worker process %d" % mp.current_process().pid)
 
     logger.debug('Loading keras model..')
-    model = keras.models.load_model('/home/daniel/projecten/smartcamera/tiny_yolo.h5' )
+    model = keras.models.load_model(MODEL_FILEPATH)
 
     try:
         ser = serial.Serial('/dev/ttyS0',9600)
@@ -73,7 +73,7 @@ def run(cam_id=None):
             sys.exit(1)
 
         logger.debug('worker : taking photo')
-        cmd = "raspistill -o %s -w 1024 -h 1024 --nopreview -t 2000" % IMAGE_FILEPATH
+        cmd = "raspistill -o %s -w 416 -h 416 --nopreview -t 2000" % IMAGE_FILEPATH
         os.system(cmd)
         logger.debug('worker : reading photo')
         photo = imread(IMAGE_FILEPATH)
