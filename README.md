@@ -19,6 +19,7 @@ This script is not included within this repository and configures the following:
 * Creates the user that runs the smartcam processes
 * Imports pre-made ssh key for user above
 * Adds user above to video/dialout groups
+* Installs file containing REST target url
 
 ##### 2. Postinstall script
 
