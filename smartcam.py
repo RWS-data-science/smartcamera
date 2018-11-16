@@ -49,8 +49,8 @@ def get_file_checksum(filename):
         logger.error("File %s not found" % filename)
         return(None)
 
-    with open(filename) as fileh:
-        content = fileh.read().encode('utf-8')
+    with open(filename, 'rb') as fileh:
+        content = fileh.read()
         md5hash = hashlib.md5(content).hexdigest()
     return(md5hash)
 
