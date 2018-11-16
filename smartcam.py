@@ -140,6 +140,7 @@ while True:
             except Exception as e:
                 logger.error(e)
 
+        # NOTE: reading large binary file causes memory spike
         if check_model_update(model_md5):
             terminate_worker()
 
@@ -156,4 +157,4 @@ while True:
     except Exception as e:
         logger.error("Unable to initialise worker (%s)" % e)
     finally:
-        time.sleep(60)
+        time.sleep(600)
