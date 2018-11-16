@@ -94,6 +94,13 @@ def check_worker_update(initial_md5):
         return(True)
     return(False)
 
+def check_model_update(initial_md5):
+    current_md5 = get_file_checksum('tiny_yolo.h5')
+    if initial_md5 != current_md5:
+        logger.info('Update to model detected')
+        return(True)
+    return(False)
+
 def terminate_worker():
     if worker_p.is_alive():
         logger.info('Terminating existing worker')
@@ -106,6 +113,7 @@ def terminate_worker():
 # initial worker process data:
 try:
     worker_md5 = get_file_checksum('worker.py')
+    model_md5 = get_file_checksum('tiny_yolo.h5')
 
     import worker
     worker_p = mp.Process(target=worker.run, args=(CAM_ID,))
@@ -131,6 +139,10 @@ while True:
                 importlib.reload(worker)
             except Exception as e:
                 logger.error(e)
+
+        if check_model_update(model_md5):
+            terminate_worker()
+
 
     # monitor worker health:
     try:
