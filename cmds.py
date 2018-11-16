@@ -26,7 +26,7 @@ ZZZ_TIME = {'devrelease' : 600,
 ###
 
 while True:
-    res = requests.get(CUSTOM_CMDS)
+    res = requests.get(CUSTOM_CMDS, timeout=60)
     if res.status_code != 200:
         # possible connection issue
         # systemd will handle respawn
