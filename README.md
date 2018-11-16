@@ -40,8 +40,8 @@ Please use the '--branch' flag to force a software channel for your target devic
 Devices are configured to regularly poll this repository for updates on the branch they were configured with. The main process will take appropriate actions depending on the type of update:
 
 - Main : runs integrity checks on update & restarts updated main process
-- Worker : terminates existing workers and re-imports worker module 
-- Modle : same as Worker
+- Worker : terminates existing worker, re-imports worker module and restarts worker
+- Model : restarts worker
 
 Additionally, a smartcam_cmds process is installed to allow executing custom commands at defined epochs. This process runs with unrestricted access to enable OS level package updates. New commands are scheduled by making entries into the 'custom_cmds' file found in this repository. Please see 'custom_cmds' for more information on syntax and usage. 
 
