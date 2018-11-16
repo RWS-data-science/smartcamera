@@ -54,8 +54,8 @@ def run(cam_id=0):
         logger.debug("Running keras v%s" % (keras.__version__))
         logger.debug('Loading keras model..')
         model = keras.models.load_model(MODEL_FILEPATH)
-    except Exception as e:
-        logger.error(e)
+    except Exception as exc:
+        logger.error(exc)
 
     try:
         ser = serial.Serial('/dev/ttyS0', 9600)
@@ -126,7 +126,7 @@ def run(cam_id=0):
                 res = requests.post(esb_url, json=to_sent, timeout=60)
                 if res.status_code == 200:
                     logger.debug('succesfully sent data')
-            except Exception as e:
-                logger.error(e)
+            except Exception as exc:
+                logger.error(exc)
 
 #run()
